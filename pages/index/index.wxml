@@ -1,0 +1,10 @@
+<!--index.wxml-->
+<view class="container">
+ <view class='btn' bindtap='onConnect'>{{isConnected?'已连接':'连接蓝牙'}}</view>
+ <view class='btn' style='margin-top:24rpx' catchtap='onGetuuid'>
+    {{serviceId&&characteristicId?'已获取设备信息':'获取设备信息'}}
+ </view>
+ <input placeholder='在此输入发送指令' bindinput='onCommand'></input>
+ <view class='btn' style='margin-top:0' catchtap='onSendCommand' >发送指令</view>
+  <view class='btn' style='margin-top:24rpx' catchtap='onCloseConnect'>断开连接</view>
+</view>
