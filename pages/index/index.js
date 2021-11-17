@@ -118,26 +118,6 @@ Page({
       }
     }, 12000);
   },
-  sendCommand(i) {
-    let _this = this;
-    if (i < chunkCount) {
-      let subCommand = subCommads[i]
-      wx.writeBLECharacteristicValue({
-        deviceId,
-        serviceId,
-        characteristicId,
-        value: _this.str2ab(subCommand),
-        success: function(res) {
-          setTimeout(function() {
-            send(i + 1)
-          }, 20)
-        },
-        fail: function(res) {
-          fail("fail", res)
-        }
-      })
-    }
-  },
   str2ab(str) {
     var buf = new ArrayBuffer(12);
     let dataView = new DataView(buf);
@@ -169,16 +149,42 @@ Page({
   },
   onSendCommand() {
     let that = this;
-    if (that.data.serviceId && that.data.characteristicId) {
+    var buf = new ArrayBuffer(6);
+    let dataView = new DataView(buf);
+    // dataView.setUint8(0, 0xA2);
+    // dataView.setUint8(1, 0x10);
+    // dataView.setUint8(2, 0x01);
+    // dataView.setUint8(3, 0x00);
+    // dataView.setUint8(4, 0x00);
+    // dataView.setUint8(5, 0x00);
+    // dataView.setUint8(6, 0x00);
+    // dataView.setUint8(7, 0x00);
+    // dataView.setUint8(8, 0x00);
+    // dataView.setUint8(9, 0x00);
+    // dataView.setUint8(10, 0x01);
+    // dataView.setUint8(11, 0x00);
+    // dataView.setUint8(12, 0x00);
+    // dataView.setUint8(13, 0x00);
+    // dataView.setUint8(14, 0x00);
+    // dataView.setUint8(15, 0x00);
+    // dataView.setUint8(16, 0x00);
+    // dataView.setUint8(17, 0x00);
+    // dataView.setUint8(18, 0xDF);
+    // dataView.setUint8(19, 0x55);
+
+    dataView.setUint8(0, 0xA2);
+    dataView.setUint8(1, 0x02);
+    dataView.setUint8(2, 0x06);
+    dataView.setUint8(3, 0x06);
+    dataView.setUint8(4, 0x77);
+    dataView.setUint8(5, 0x55);
       wx.writeBLECharacteristicValue({
-        deviceId: that.data.deviceId,
-        serviceId: that.data.serviceId,
-        characteristicId: that.data.characteristicId,
-        value: that.str2ab(that.data.command),
+        deviceId: "E1:0D:A6:41:21:59",
+        serviceId: "0000ffe0-0000-1000-8000-00805f9b34fb",
+        characteristicId: "0000ffe1-0000-1000-8000-00805f9b34fb",
+        value: buf,
         success: function(res) {
-          // setTimeout(function () {
-          //   send(i + 1)
-          // }, 20)
+          console.log(res);
           console.log("发送指令成功");
           wx.showToast({
             title: '发送成功',
@@ -189,13 +195,6 @@ Page({
           console.warn("发送指令失败", res)
         }
       })
-    }else{
-      wx.showModal({
-        title: '提示',
-        content: '请先获取设备信息',
-        showCancel:false
-      })
-    }
   },
   onGetuuid(){
     let that = this;
@@ -205,7 +204,7 @@ Page({
     })
     console.log("开始获取设备信息");
     wx.getBLEDeviceServices({
-      deviceId: that.data.deviceId,
+      deviceId: "E1:0D:A6:41:21:59",
       success(getServicesRes) {
         console.log("getServicesRes", getServicesRes);
         let service = getServicesRes.services[1]
@@ -215,28 +214,24 @@ Page({
           title: '获取characteristicId',
         })
         wx.getBLEDeviceCharacteristics({
-          deviceId: that.data.deviceId,
-          serviceId: serviceId,
+          deviceId: "E1:0D:A6:41:21:59",
+          serviceId: "0000ffe0-0000-1000-8000-00805f9b34fb",
           success(getCharactersRes) {
             console.log("getCharactersRes", getCharactersRes);
             wx.hideLoading();
             let characteristic = getCharactersRes.characteristics[0]
             let characteristicId = characteristic.uuid
-            that.setData({
-              serviceId: serviceId,
-              characteristicId: characteristicId
-            })
-            console.log('成功获取uuId', that.data.serviceId, that.data.characteristicId);
             wx.notifyBLECharacteristicValueChange({
               state: true,
-              deviceId: that.data.deviceId,
-              serviceId: serviceId,
-              characteristicId: getCharactersRes.characteristics[1].uuid,
+              deviceId: "E1:0D:A6:41:21:59",
+              serviceId: "0000ffe0-0000-1000-8000-00805f9b34fb",
+              characteristicId: characteristicId,
               success() {
                 console.log('开始监听特征值')
                 wx.onBLECharacteristicValueChange(function (onNotityChangeRes) {
                   console.log('监听到特征值更新', onNotityChangeRes);
                   let characteristicValue = that.ab2hex(onNotityChangeRes.value);
+                  console.log("characteristicValue-16进制", characteristicValue );
                   wx.showModal({
                     title: '监听到特征值更新',
                     content: `更新后的特征值(16进制格式):${characteristicValue}`,
